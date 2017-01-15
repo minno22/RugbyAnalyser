@@ -12,3 +12,8 @@ ResultsWindow::~ResultsWindow()
 {
     delete ui;
 }
+
+ResultsWindow::setText(QString text)
+{
+    ui->textBrowser->setText(text);
+}

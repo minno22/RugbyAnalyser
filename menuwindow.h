@@ -2,6 +2,8 @@
 #define MENUWINDOW_H
 
 #include <QMainWindow>
+#include "keyeventoptions.h"
+#include "viewdb.h"
 
 namespace Ui {
 class MenuWindow;
@@ -15,8 +17,15 @@ public:
     explicit MenuWindow(QWidget *parent = 0);
     ~MenuWindow();
 
+private slots:
+    void on_btnKeyEventAnalysis_clicked();
+
+    void on_btnViewDb_clicked();
+
 private:
     Ui::MenuWindow *ui;
+    KeyEventOptions keo;
+    ViewDb vdb;
 };
 
 #endif // MENUWINDOW_H

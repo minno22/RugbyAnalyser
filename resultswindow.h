@@ -14,6 +14,7 @@ class ResultsWindow : public QDialog
 public:
     explicit ResultsWindow(QWidget *parent = 0);
     ~ResultsWindow();
+    setText(QString text);
 
 private:
     Ui::ResultsWindow *ui;
