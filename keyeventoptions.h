@@ -23,15 +23,27 @@ public:
 private slots:
     void on_btnAnalyse_clicked();
 
+    void on_btnData1_clicked();
+
+    void on_btnData2_clicked();
+
+    void on_btnCompare_clicked();
+
 private:
     Ui::KeyEventOptions *ui;
+
     void populateDDL();
     QueryBuilder qb;
     QueryDB qdb;
     DataAnalyser da;
     ResultsWindow rw;
-    int getNumMatches();
+    QStringList events, comps, withins, times, conditions;
+    DataAnalyser::dataSet Set1, Set2;
+
+    int getNumMatches(QString comp);
     QStringList getComps();
+    void setDataSet(int num);
+    QString analyse(DataAnalyser::dataSet data);
 };
 
 #endif // KEYEVENTOPTIONS_H

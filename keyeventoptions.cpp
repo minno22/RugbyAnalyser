@@ -14,19 +14,17 @@ KeyEventOptions::~KeyEventOptions()
     delete ui;
 }
 
-
 void KeyEventOptions::on_btnAnalyse_clicked()
 {
-    int event = ui->cbEvent->currentIndex();
-    QString comp = ui->cbComp->currentText();
-    int within = ui->cbWithin->currentIndex();
-    int time = ui->cbTime->currentIndex();
-    qDebug() << within << endl;
-    QString query = qb.getQuery(event, comp, within, time);
-    qdb.setQuery(query);
-    int num = getNumMatches();
-    QSqlQuery qry = qdb.executeQuery();
-    QString result = da.analyse(qry, event, num);
+    DataAnalyser::dataSet ds;
+    ds.event = ui->cbEvent->currentIndex();
+    ds.comp = ui->cbComp->currentText();
+    ds.within = ui->cbWithin->currentIndex();
+    ds.time = ui->cbTime->currentIndex();
+    ds.cond = ui->cbConditions->currentIndex();
+
+    QString result = analyse(ds);
+
     qDebug() << result << endl;
     rw.setText(result);
     rw.show();
@@ -34,21 +32,24 @@ void KeyEventOptions::on_btnAnalyse_clicked()
 
 void KeyEventOptions::populateDDL()
 {
-    QStringList events, comps, within, time;
-    events << "Matches" << "Tries" << "Penalties" << "Drop Goals" << "Bookings";
+    events << "Matches" << "Tries" << "Penalties" << "Drop Goals" << "Bookings" << "All Scores" << "Game Stories";
     comps = getComps();
-    within << "All Time" << "Last Week" << "Last 30 Days" << "Last 6 Months" << "Last Year";
-    time << "Full Match" << "First Half" << "Second Half" << "0-20 Minutes" << "20-40 Minutes"
+    withins << "All Time" << "Last Week" << "Last 30 Days" << "Last 6 Months" << "Last Year";
+    times << "Full Match" << "First Half" << "Second Half" << "0-20 Minutes" << "20-40 Minutes"
             << "40-60 Minutes" << "60-80 Minutes";
+    conditions << "None" << "Player Sin Binned" << "Player Sent Off" << "2+ Players Sin Binned/Sent Off";
     ui->cbEvent->insertItems(0, events);
     ui->cbComp->insertItems(0, comps);
-    ui->cbWithin->insertItems(0, within);
-    ui->cbTime->insertItems(0, time);
+    ui->cbWithin->insertItems(0, withins);
+    ui->cbTime->insertItems(0, times);
+    ui->cbConditions->insertItems(0, conditions);
 }
 
-int KeyEventOptions::getNumMatches()
+int KeyEventOptions::getNumMatches(QString comp)
 {
     int no = 0, oldNo, newNo;
+    QString query = qb.getQuery(0, comp, 0, 0, 0);
+    qdb.setQuery(query);
     QSqlQuery qry = qdb.executeQuery();
     while (qry.next()) {
         newNo = qry.value(0).toInt();
@@ -78,4 +79,108 @@ QStringList KeyEventOptions::getComps()
        }
     }
     return comps;
+}
+
+void KeyEventOptions::setDataSet(int num)
+{
+    int event = ui->cbEvent->currentIndex();
+    QString comp = ui->cbComp->currentText();
+    int within = ui->cbWithin->currentIndex();
+    int time = ui->cbTime->currentIndex();
+    int condition = ui->cbConditions->currentIndex();
+    QString output = events.at(event) + "\n\n" + comp + "\n\n" + withins.at(within) + "\n\n" + times.at(time)
+                        + "\n\n" + conditions.at(condition);
+
+    if (num == 1){
+        Set1.event = event;
+        Set1.comp = comp;
+        Set1.within = within;
+        Set1.time = time;
+        Set1.cond = condition;
+        Set1.set = true;
+
+        ui->tbData1->setText(output);
+    }
+    else{
+        Set2.event = event;
+        Set2.comp = comp;
+        Set2.within = within;
+        Set2.time = time;
+        Set2.cond = condition;
+        Set2.set = true;
+
+        ui->tbData2->setText(output);
+    }
+}
+
+QString KeyEventOptions::analyse(DataAnalyser::dataSet data)
+{
+    int num = getNumMatches(data.comp);
+    QString query, result;
+    QSqlQuery qry;
+    switch(data.event){
+    case 0: {
+        for (int i = 0; i < 5; i++){
+            query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+            qdb.setQuery(query);
+            qry = qdb.executeQuery();
+            result += da.analyse(qry, i, num) + "\n\n";
+            qry.clear();
+        }
+    }break;
+    case 5: {
+        for (int i = 1; i < 4; i++){
+            query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+            qdb.setQuery(query);
+            qry = qdb.executeQuery();
+            result += da.analyse(qry, i, num) + "\n\n";
+            qry.clear();
+        }
+    }break;
+    case 6: {
+        QVector <QString> queries;
+        for (int i = 1; i < 4; i++){
+            query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+            queries.push_back(query);
+        }
+        result = da.analyseStories(num, queries);
+    }break;
+    default: {
+        query = qb.getQuery(data.event, data.comp, data.within, data.time, data.cond);
+        qdb.setQuery(query);
+        qry = qdb.executeQuery();
+        result = da.analyse(qry, data.event, num);
+    }
+    }
+
+    return result;
+}
+
+void KeyEventOptions::on_btnData1_clicked()
+{   
+    setDataSet(1);
+}
+
+void KeyEventOptions::on_btnData2_clicked()
+{
+    setDataSet(2);
+}
+
+void KeyEventOptions::on_btnCompare_clicked()
+{
+    if (Set1.set && Set2.set){
+        if (Set1.event != Set2.event)
+            qDebug() << "Cannot compare " + events.at(Set1.event) + " with " + events.at(Set2.event) << endl;
+        else{
+            qDebug() << "ok to compare" << endl;
+            QString first = analyse(Set1);
+            QString second = analyse(Set2);
+            QString result = da.compare(first, second);
+
+            rw.setText(result);
+            rw.show();
+        }
+    }
+    else
+        qDebug() << "Both data sets must be set for comparison" << endl;
 }

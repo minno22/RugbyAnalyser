@@ -7,11 +7,11 @@ QueryBuilder::QueryBuilder()
 
 }
 
-QString QueryBuilder::getQuery(int event, QString comp, int within, int time)
+QString QueryBuilder::getQuery(int event, QString comp, int within, int time, int condition)
 {
     //SELECT * FROM Try JOIN Match ON Try.MatchID = Match.MatchID WHERE Competition LIKE 'Pro 12'
 
-    QString select, table, join = "", where = "", yymmdd = "", timeStr = "";
+    QString select, table, join = "", where = "", yymmdd = "", timeStr = "", join2 = "";
 
     select = "SELECT * FROM Match";
 
@@ -40,7 +40,10 @@ QString QueryBuilder::getQuery(int event, QString comp, int within, int time)
     if (time > 0)
         timeStr = setTime(time);
 
-    query = select + join + where + yymmdd + timeStr;
+    if (condition > 0)
+        join2 = " JOIN Booking ON Match.MatchID = Booking.MatchID";
+
+    query = select + join + join2 + where + yymmdd + timeStr;
     qDebug() << query;
     return query;
 }

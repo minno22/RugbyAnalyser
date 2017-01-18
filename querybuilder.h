@@ -7,7 +7,7 @@ class QueryBuilder
 {
 public:
     QueryBuilder();
-    QString getQuery(int event, QString comp, int within, int time);
+    QString getQuery(int event, QString comp, int within, int time, int condition);
     QString maxId();
     QString getUnique(int idx);
 

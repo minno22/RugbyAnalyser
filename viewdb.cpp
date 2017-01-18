@@ -24,7 +24,7 @@ void ViewDb::setup(int idx)
 
 void ViewDb::displayTable(int index)
 {
-    QString query = qb.getQuery(index, "", 0, 0);
+    QString query = qb.getQuery(index, "", 0, 0, 0);
     qdb.setQuery(query);
     QSqlQuery qry = qdb.executeQuery();
     QString result;

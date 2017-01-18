@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>738</width>
+    <height>403</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QPushButton" name="btnAnalyse">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>250</y>
+     <x>70</x>
+     <y>300</y>
      <width>101</width>
      <height>31</height>
     </rect>
@@ -150,6 +150,152 @@
     <rect>
      <x>130</x>
      <y>190</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="currentText">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lblCompare">
+   <property name="geometry">
+    <rect>
+     <x>430</x>
+     <y>10</y>
+     <width>221</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>16</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Compare 2 Data Sets</string>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="tbData1">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>90</y>
+     <width>171</width>
+     <height>171</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="tbData2">
+   <property name="geometry">
+    <rect>
+     <x>540</x>
+     <y>90</y>
+     <width>171</width>
+     <height>171</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lblData1">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>60</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Data Set 1</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lblData2">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>60</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Data Set 2</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnData1">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>270</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Set Data Set 1</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnData2">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>270</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Set Data Set 2</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnCompare">
+   <property name="geometry">
+    <rect>
+     <x>470</x>
+     <y>330</y>
+     <width>121</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Compare</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lblConditions">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>240</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>16</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Conditions</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="cbConditions">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>240</y>
      <width>121</width>
      <height>31</height>
     </rect>
