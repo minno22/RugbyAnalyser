@@ -304,22 +304,24 @@ QString DataAnalyser::analyseBookings(QSqlQuery qry, int totMatches)
 
 void DataAnalyser::organiseMatches(QVector<Match> * matches)
 {
+    int l = 0, r;
     for (int i = 0; i < matches->size(); i++){
         Match m = matches->at(i);
-        matches->removeAt(i);
         QVector <Score> home = m.home;
-        int l = 0;
-        int r = home.size() - 1;
-        home = sortMatches(home, l, r);
-        m.home = home;
+        if (home.size() > 1){
+            r = home.size() - 1;
+            home = sortMatches(home, l, r);
+            m.home = home;
+        }
 
         QVector <Score> away = m.away;
-        l = 0;
-        r = away.size() - 1;
-        away = sortMatches(away, l, r);
-        m.away = away;
+        if (away.size() > 1){
+            r = away.size() - 1;
+            away = sortMatches(away, l, r);
+            m.away = away;
+        }
 
-        matches->push_front(m);
+        matches->replace(i, m);
     }
 }
 
@@ -353,24 +355,27 @@ QVector <DataAnalyser::Score> DataAnalyser::sortMatches(QVector<DataAnalyser::Sc
     return scores;
 }
 
-void DataAnalyser::generateStories(QVector<Match> *matches, QString * output)
+void DataAnalyser::generateStories(QVector<Match> * matches, QString * output, QVector <QVector <int> > * diffs)
 {
-    int diff[16];
-    int time, homeScr, awayScr;
-    int k, l;
+    QVector <int> diff;
+    int time, homeScr, awayScr, k, l, home5, away5;
     for (int i = 0; i < matches->size(); i++){
         homeScr = 0, awayScr = 0, k = 0, l = 0;
         Match m = matches->at(i);
+        diff.insert(0, m.id);
         output->append("\n\nMatch Id: " + QString::number(m.id));
         for (int j = 1; j < 17; j++){
             time = j * 5;
+            home5 = 0, away5 = 0;
             for (k; k < m.home.size();){
                 if (j != 17 && m.home.at(k).time <= time){
-                    homeScr += m.home.at(k).value;
+                    home5 = m.home.at(k).value;
+                    homeScr += home5;
                     k++;
                 }
                 else if (j == 17){
-                    homeScr += m.home.at(k).value;
+                    home5 = m.home.at(k).value;
+                    homeScr += home5;
                     k++;
                 }
                 else
@@ -378,29 +383,164 @@ void DataAnalyser::generateStories(QVector<Match> *matches, QString * output)
             }
             for (l; l < m.away.size();){
                 if (j != 17 && m.away.at(l).time <= time){
-                    awayScr += m.away.at(l).value;
+                    away5 = m.away.at(l).value;
+                    awayScr += away5;
                     l++;
                 }
                 else if (j == 17){
-                    awayScr += m.away.at(l).value;
+                    away5 = m.away.at(l).value;
+                    awayScr += away5;
                     l++;
                 }
                 else
                     break;
             }
-            diff[j-1] = homeScr - awayScr;
+            int val, scr = home5 - away5;
+            if (scr == 0)
+                val = 0;
+            else if (scr < 0){
+                if (scr >= -7)
+                    val = -1;
+                else if (scr >= -14)
+                    val = -2;
+                else
+                    val = -3;
+            }
+            else{
+                if (scr <= 7)
+                    val = 1;
+                else if (scr <= 14)
+                    val = 2;
+                else
+                    val = 3;
+            }
+            diff.insert(j, val);
             output->append("   " + QString::number(time) + ": " + QString::number(homeScr - awayScr));
+        }
+        diffs->insert(i, diff);
+    }
+}
+
+void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
+{
+    output->append("\n\n\nStory Comparison\n");
+    for (int i = 0; i < diffs->size(); i++){
+        for (int j = i + 1; j < diffs->size(); j++){
+            bool equal = true;
+            for (int k = 1; k < 17 && equal; k++){
+                if (diffs->at(i).at(k) != diffs->at(j).at(k))
+                    equal = false;
+            }
+            if (equal){
+                output->append("\nMatch Found: Id: " + QString::number(diffs->at(i).at(0)) + " and Id: " +
+                        QString::number(diffs->at(j).at(0)));
+                /*for (int k = 0; k < 17 && equal; k++)
+                    output->append("\n " + QString::number(diffs->at(i).at(k)) + " " +
+                                    QString::number(diffs->at(j).at(k)));*/
+            }
         }
     }
 }
 
+QString DataAnalyser::tryConditions(QSqlQuery qry, int totMatches, QVector<Booking> *bookings)
+{
+    QString output = "Analysis of Tries Scored during sin bin.\n\n\n";
+    QString cardColour = "Yellow";
+    Booking b;
+    while (qry.next()){
+        if (qry.value(4).toString() == "Yellow"){
+            int id = qry.value(0).toInt();
+            bool found = false;
+            for (int i = 0; i < bookings->size() && !found; i++){
+                if (id == bookings->at(i).id){
+                    b = bookings->at(i);
+                    bookings->removeAt(i);
+                    found = true;
+                }
+            }
+            if (!found){
+                b.id = qry.value(0).toInt();
+                b.time = qry.value(2).toInt();
+                b.team = qry.value(3).toInt();
+                b.scored = 0;
+                b.conceded = 0;
+            }
+            int tryTime = qry.value(7).toInt();
+            if (tryTime >= b.time && tryTime < b.time + 10){
+                int score;
+                if (qry.value(9).toInt() == 0)
+                    score = 5;
+                else
+                    score = 7;
+                if (qry.value(8).toInt() == b.team)
+                    b.scored += score;
+                else
+                    b.conceded += score;
+            }
+            bookings->push_front(b);
+        }
+    }
+    /*for (int i = 0; i < bookings->size(); i++){
+        b = bookings->at(i);
+        output += "\nBooking Id: " + QString::number(b.id) + ", time: " + QString::number(b.time) + ", team: " +
+                    QString::number(b.team) + ", scored: " + QString::number(b.scored) + ", conceded: " +
+                    QString::number(b.conceded);
+    }*/
+    return output;
+}
+
+QString DataAnalyser::penDropConditions(QSqlQuery qry, int eve, int totMatches, QVector <Booking> * bookings)
+{
+    QString event;
+    if (eve == 0)
+        event = "Penalties";
+    else
+        event = "Drop Goals";
+    QString output = "Analysis of " + event + " Scored during sin bin.\n\n\n";
+    QString cardColour = "Yellow";
+    Booking b;
+    while (qry.next()){
+        if (qry.value(4).toString() == "Yellow"){
+            int id = qry.value(0).toInt();
+            bool found = false;
+            for (int i = 0; i < bookings->size() && !found; i++){
+                if (id == bookings->at(i).id){
+                    b = bookings->at(i);
+                    bookings->removeAt(i);
+                    found = true;
+                }
+            }
+            if (!found){
+                b.id = qry.value(0).toInt();
+                b.time = qry.value(2).toInt();
+                b.team = qry.value(3).toInt();
+                b.scored = 0;
+                b.conceded = 0;
+            }
+            int scoreTime = qry.value(7).toInt();
+            if (scoreTime >= b.time && scoreTime < b.time + 10){
+                int score = 3;
+
+                if (qry.value(8).toInt() == b.team)
+                    b.scored += score;
+                else
+                    b.conceded += score;
+            }
+            bookings->push_front(b);
+        }
+    }
+
+    return output;
+}
+
 QString DataAnalyser::analyseStories(int totMatches, QVector<QString> queries)
 {
-    int no = 0, oldNo, newNo;
-    QString result = "Game Stories Generation";
+    int oldNo, newNo;
+    QString result = "Game Stories Generation\n\nTotal Matches in Query: " + QString::number(totMatches) + "\n\n\n";
     QVector <Score> home, away;
     bool first;
     QVector <Match> matchesVec;
+    QVector <QVector <int> > diffs;
 
     for (int i = 0; i < queries.size(); i++){
         QString query = queries.at(i);
@@ -447,7 +587,6 @@ QString DataAnalyser::analyseStories(int totMatches, QVector<QString> queries)
                             }
                         }
                     }
-                    no++;
                     oldNo = newNo;
                     home.clear();
                     away.clear();
@@ -501,14 +640,63 @@ QString DataAnalyser::analyseStories(int totMatches, QVector<QString> queries)
     }
 
     organiseMatches(&matchesVec);
-    generateStories(&matchesVec, &result);
+    generateStories(&matchesVec, &result, &diffs);
 
-    /*for (int a = 0; a < matchesVec.size(); a++){
-          result += "\n\n" + QString::number(matchesVec.at(a).id);
-          for (int b = 0; b < matchesVec.at(a).home.size(); b++)
-              result += " " + QString::number(matchesVec.at(a).home.at(b).time);
-    }*/
+    qDebug() << result << endl;
+    groupStories(&result, &diffs);
 
+    return result;
+}
+
+QString DataAnalyser::analyseConditions(int num, QVector<QString> queries)
+{
+    QVector <Booking> bookings;
+    QString result;
+    for (int i = 0; i < queries.size(); i++){
+        QString query = queries.at(i);
+        QueryDB qdb;
+        QSqlQuery qry;
+        qdb.setQuery(query);
+        qry = qdb.executeQuery();
+
+        switch (i) {
+        case 0: result += analyseBookings(qry, num);
+            break;
+        case 1: result += tryConditions(qry, num, &bookings);
+            break;
+        case 2: result += penDropConditions(qry, 0, num, &bookings);
+            break;
+        case 3: result += penDropConditions(qry, 1, num, &bookings);
+            break;
+        default:
+            break;
+        }
+        qry.clear();
+    }
+
+    double avgCon = 0.0, avgScor = 0.0, avgDiff = 0.0;
+    int size = bookings.size();
+    for (int i = 0; i < size; i++){
+        Booking b;
+        b = bookings.at(i);
+        int scored = b.scored;
+        int conceded = b.conceded;
+        avgCon += conceded;
+        avgScor += scored;
+        avgDiff += scored - conceded;
+       // qDebug() << scored << " " << avgScor << " " << conceded << " " << avgCon << " " << size << endl;
+        /*result += "\nBooking Id: " + QString::number(b.id) + ", time: " + QString::number(b.time) + ", team: " +
+                    QString::number(b.team) + ", scored: " + QString::number(b.scored) + ", conceded: " +
+                    QString::number(b.conceded);*/
+    }
+    avgCon = floor(((double)avgCon / size)/scale + 0.5) * scale;
+    avgScor = floor(((double)avgScor / size)/scale + 0.5) * scale;
+    avgDiff = floor(((double)avgDiff / size)/scale + 0.5) * scale;
+    result += "Number of Matches in Query: " + QString::number(num) + "\nNumber of Bookings in Query: " +
+                QString::number(size) +
+                "\n\nAverage score conceded by team with sin binned player: " + QString::number(avgCon) +
+                "\n\nAverage score scored by team with sin binned player: " + QString::number(avgScor) +
+                "\n\nAverage change in score during a sin bin: " + QString::number(avgDiff);
     return result;
 }
 

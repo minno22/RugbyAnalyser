@@ -118,39 +118,55 @@ QString KeyEventOptions::analyse(DataAnalyser::dataSet data)
     int num = getNumMatches(data.comp);
     QString query, result;
     QSqlQuery qry;
-    switch(data.event){
-    case 0: {
-        for (int i = 0; i < 5; i++){
-            query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+    if (data.cond == 0){
+        switch(data.event){
+        case 0: {
+            for (int i = 0; i < 5; i++){
+                query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+                qdb.setQuery(query);
+                qry = qdb.executeQuery();
+                result += da.analyse(qry, i, num) + "\n\n";
+                qry.clear();
+            }
+        }break;
+        case 5: {
+            for (int i = 1; i < 4; i++){
+                query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+                qdb.setQuery(query);
+                qry = qdb.executeQuery();
+                result += da.analyse(qry, i, num) + "\n\n";
+                qry.clear();
+            }
+        }break;
+        case 6: {
+            QVector <QString> queries;
+            for (int i = 1; i < 4; i++){
+                query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
+                queries.push_back(query);
+            }
+            result = da.analyseStories(num, queries);
+        }break;
+        default: {
+            query = qb.getQuery(data.event, data.comp, data.within, data.time, data.cond);
             qdb.setQuery(query);
             qry = qdb.executeQuery();
-            result += da.analyse(qry, i, num) + "\n\n";
-            qry.clear();
+            result = da.analyse(qry, data.event, num);
+        }break;
         }
-    }break;
-    case 5: {
-        for (int i = 1; i < 4; i++){
-            query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
-            qdb.setQuery(query);
-            qry = qdb.executeQuery();
-            result += da.analyse(qry, i, num) + "\n\n";
-            qry.clear();
-        }
-    }break;
-    case 6: {
+    }
+    else{
         QVector <QString> queries;
+        query = qb.getQuery(4, data.comp, data.within, data.time, 0);
+        queries.push_back(query);
         for (int i = 1; i < 4; i++){
             query = qb.getQuery(i, data.comp, data.within, data.time, data.cond);
             queries.push_back(query);
         }
-        result = da.analyseStories(num, queries);
-    }break;
-    default: {
-        query = qb.getQuery(data.event, data.comp, data.within, data.time, data.cond);
-        qdb.setQuery(query);
-        qry = qdb.executeQuery();
-        result = da.analyse(qry, data.event, num);
-    }
+            //qdb.setQuery(query);
+            //qry = qdb.executeQuery();
+            result += da.analyseConditions(num, queries) + "\n\n";
+            //qry.clear();
+
     }
 
     return result;
