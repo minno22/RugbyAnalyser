@@ -6,6 +6,9 @@
 
 QT       += core gui
 QT       += sql
+QT       += charts
+
+INCLUDEPATH += "C:\Users\Niall\Documents\eigen-eigen-da9b4e14c255\eigen-eigen-da9b4e14c255"
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

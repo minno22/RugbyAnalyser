@@ -25,7 +25,7 @@ QSqlQuery QueryDB::executeQuery()
 
     if(db.open())
     {
-        qDebug() << "opened";
+        qDebug() << "opened, query = " << qryString << endl;;
 
         QSqlQuery query;
 

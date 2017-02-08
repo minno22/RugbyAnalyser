@@ -11,7 +11,7 @@ QString QueryBuilder::getQuery(int event, QString comp, int within, int time, in
 {
     //SELECT * FROM Try JOIN Match ON Try.MatchID = Match.MatchID WHERE Competition LIKE 'Pro 12'
 
-    QString select, table, join = "", where = "", yymmdd = "", timeStr = "";
+    QString select, table, join = "", where = "", yymmdd = "", timeStr = "", firstCond = "WHERE";
 
     select = "SELECT * FROM Match";
 
@@ -31,28 +31,40 @@ QString QueryBuilder::getQuery(int event, QString comp, int within, int time, in
         join = " JOIN " + table + " ON Match.MatchID = " + table + ".MatchID";
     }
 
-    if (comp != "All")
-        where = " WHERE Competition LIKE '" + comp + "'";
+    if (comp != "All"){
+        where = " " + firstCond + " Competition LIKE '" + comp + "'";
+        firstCond = " AND ";
+    }
 
-    if (within > 0)
-        yymmdd = setDate(within);
-
-    if (time > 0)
-        timeStr = setTime(time);
+    if (within > 0){
+        yymmdd = " " + firstCond + " MatchDate >= '";
+        yymmdd += setDate(within);
+        firstCond = " AND ";
+    }
 
     if (condition > 0){
         select = "SELECT * FROM Booking JOIN " + table + " ON Booking.MatchID = " + table + ".MatchID";
         join = " JOIN Match ON Booking.MatchID = Match.MatchID";
+        if (time > 0){
+            timeStr = " " + firstCond + " ";
+            timeStr += setTime(time, 1);
+            firstCond = " AND ";
+        }
+    }
+    else if (time > 0){
+        timeStr = " " + firstCond + " ";
+        timeStr += setTime(time, 0);
+        firstCond = " AND ";
     }
 
     query = select + join + where + yymmdd + timeStr;
-    qDebug() << query;
+    //qDebug() << query;
     return query;
 }
 
 QString QueryBuilder::setDate(int idx)
 {
-    QString yymmdd = " AND MatchDate >= '";
+    QString yymmdd = "";
 
     // current date/time based on current system
     time_t now = time(0);
@@ -87,9 +99,14 @@ QString QueryBuilder::setDate(int idx)
     return yymmdd;
 }
 
-QString QueryBuilder::setTime(int idx)
+QString QueryBuilder::setTime(int idx, int tme)
 {
-    QString time = " AND TimeInMatch ";
+    QString tInMatch;
+    if (tme == 0)
+        tInMatch = "TimeInMatch";
+    else
+        tInMatch = "Booking.TimeInMatch";
+    QString time = tInMatch + " ";
     switch (idx) {
     case 1: time += "<= 40" ;
         break;
@@ -97,9 +114,9 @@ QString QueryBuilder::setTime(int idx)
         break;
     case 3: time += "< 20" ;
         break;
-    case 4: time += ">= 20 AND TimeInMatch < 40" ;
+    case 4: time += ">= 20 AND " + tInMatch + " < 40" ;
         break;
-    case 5: time += ">= 40 AND TimeInMatch < 60" ;
+    case 5: time += ">= 40 AND " + tInMatch + " < 60" ;
         break;
     case 6: time += "> 60" ;
         break;

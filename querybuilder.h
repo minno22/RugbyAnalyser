@@ -15,7 +15,7 @@ private:
     QString query;
     void DatePlusDays( struct tm* date, int days );
     QString setDate(int idx);
-    QString setTime(int idx);
+    QString setTime(int idx, int tme);
 };
 
 #endif // QUERYBUILDER_H

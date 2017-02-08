@@ -37,8 +37,9 @@ private:
     QueryDB qdb;
     DataAnalyser da;
     ResultsWindow rw;
-    QStringList events, comps, withins, times, conditions;
+    QStringList events, comps, withins, times;
     DataAnalyser::dataSet Set1, Set2;
+    QVector <int> arr;
 
     int getNumMatches(QString comp);
     QStringList getComps();
