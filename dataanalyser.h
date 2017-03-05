@@ -46,6 +46,11 @@ private:
         int conceded;
     };
 
+    struct Story{
+        int idx, max = 0, min = 0, last = 0, pos = 0, neg = 0;
+        double slope, yInt;
+    };
+
     QChartView *chart2;
 
     QString analyseTries(QSqlQuery qry, int totMatches, QVector <int> * arr);

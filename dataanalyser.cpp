@@ -3,11 +3,11 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 #include <QtCharts/QLineSeries>
-#include <Eigen/Dense>
-#include <iostream>
-#include <iomanip>
+//#include <Eigen/Dense>
+//#include <iostream>
+//#include <iomanip>
 
-using namespace Eigen;
+//using namespace Eigen;
 
 DataAnalyser::DataAnalyser()
 {
@@ -421,7 +421,7 @@ void DataAnalyser::generateStories(QVector<Match> * matches, QString * output, Q
                 else
                     break;
             }
-            int val, scr = home5 - away5;
+           /* int val, scr = home5 - away5;
             if (scr == 0)
                 val = 0;
             else if (scr < 0){
@@ -440,7 +440,7 @@ void DataAnalyser::generateStories(QVector<Match> * matches, QString * output, Q
                 else
                     val = 3;
             }
-            //diff.insert(j, val);
+            //diff.insert(j, val);*/
             diff.insert(j+1, homeScr - awayScr);
             output->append("   " + QString::number(time) + ": " + QString::number(homeScr - awayScr));
         }
@@ -450,19 +450,39 @@ void DataAnalyser::generateStories(QVector<Match> * matches, QString * output, Q
 
 void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
 {
-    output->append("\n\n\nLines of best fit\n");
+    QVector <Story> stories;
+
+    output->append("\n\n\nLines of best fit:\n");
     QChart *chart = new QChart();
-    int i, n = 16;
+    int i, n = 17, oldno;
     for (int iq = 0; iq < diffs->size(); iq++){
-        QLineSeries *series = new QLineSeries();
-        double x[17], y[17], a, b;
+        Story story;
+        story.idx = iq;
+        //QLineSeries *series = new QLineSeries();
+        double x[17], y[17];
         QVector <int> d = diffs->at(iq);
+        oldno = 0;
         for (int j = 0; j < 17; j++){
+            int num = d.at(j+1);
             x[j] = j*5;
-            y[j] = d.at(j+1);
-            series->append(j*5, d.at(j+1));
+            y[j] = num;
+
+            if (num > story.max)
+                story.max = num;
+            else if (num < story.min)
+                story.min = num;
+
+            if (j == 16)
+                story.last = num;
+
+            if (num > oldno)
+                story.pos++;
+            else if (num < oldno)
+                story.neg++;
+
+            //series->append(j*5, d.at(j+1));
         }
-        chart->addSeries(series);
+        //chart->addSeries(series);
 
         double xsum=0, x2sum=0, ysum=0, xysum=0;                //variables for sums/sigma of xi,yi,xi^2,xiyi etc
         for (i=0;i<17;i++)
@@ -472,21 +492,228 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
             x2sum = x2sum+pow(x[i],2);                //calculate sigma(x^2i)
             xysum = xysum+x[i]*y[i];                    //calculate sigma(xi*yi)
         }
-        a=(n*xysum-xsum*ysum)/(n*x2sum-xsum*xsum);            //calculate slope
-        b=(x2sum*ysum-xsum*xysum)/(x2sum*n-xsum*xsum);            //calculate intercept
-        double y_fit[17];                        //an array to store the new fitted values of y
-        for (i=0;i<17;i++)
-            y_fit[i]=a*x[i]+b;                    //to calculate y(fitted) at given x points
-        qDebug() << "Match Id:" << d.at(0) << ": " << a << "x + " << b << endl;
-        output->append("\nMatch Id:" + QString::number(d.at(0)) + ": " + QString::number(a) + "x + " +
-                            QString::number(b));
+        story.slope = (n*xysum-xsum*ysum)/(n*x2sum-xsum*xsum);            //calculate slope
+        story.yInt = (x2sum*ysum-xsum*xysum)/(x2sum*n-xsum*xsum);            //calculate intercept
+
+        qDebug() << "Match Id:" << d.at(0) << ": " << story.slope << "x + " << story.yInt << endl;
+        output->append("\nMatch Id:" + QString::number(d.at(0)) + ": " + QString::number(story.slope) + "x + " +
+                            QString::number(story.yInt));
+
+        stories.append(story);
+
+        /*if (story.slope > 0 && story.slope <= 0.1 && story.yInt > 0){
+            QLineSeries *series2 = new QLineSeries();
+            output->append("\nMatch Found: Id: " + QString::number(diffs->at(iq).at(0)));
+            for (int k = 0; k < 17; k++){
+                output->append("\n " + QString::number(diffs->at(iq).at(k+1)));
+                series2->append(k*5, diffs->at(iq).at(k+1));
+            }
+            chart->addSeries(series2);
+        }*/
     }
 
-    chart->createDefaultAxes();
-    chart->setTitle("Game Stories");
-    chart->legend()->hide();
+    output->append("\n\n\nStory Comparison\n\n");
+    /*for (int it0 = 0 ; it0 < stories.size() - 1; it0++){
+        Story story0 = stories.at(it0), story1;
+        output->append("\nMatch Id:" + QString::number(diffs->at(story0.idx).at(0))/* + " " +
+                            QString::number(story0.max) + " " + QString::number(story0.min) + " " +
+                            QString::number(story0.last) + " " + QString::number(story0.neg) + " " +
+                            QString::number(story0.pos) + " " + QString::number(story0.slope) + " " +
+                            QString::number(story0.yInt));
+        if (story0.last >= 0){
+            for (int it1 = it0 + 1; it1 < stories.size(); it1++){
+                story1 = stories.at(it1);
+                if (story1.last >= 0){
+                    if (story0.slope > story1.slope - 0.05 && story0.slope < story1.slope + 0.05)
+                        if (story0.yInt > story1.yInt - 5 && story0.yInt < story1.yInt + 5)
+                            if ((story0.max - story0.min) > (story1.max - story1.min - 7) &&
+                                    (story0.max - story0.min) < (story1.max - story1.min + 7))
+                                output->append("\nSimilar Story Found, Match Id:" +
+                                           QString::number(diffs->at(story1.idx).at(0)) + " " +
+                                           QString::number(story1.slope) + " " + QString::number(story1.yInt));
+                }
+            }
+        }
+    }*/
 
-    chart2 = new QChartView(chart);
+    /*for (int i = 0 ; i < stories.size(); i++){
+        Story story = stories.at(i);
+        if (story.last >= 0){
+            if (story.max <= 7 && story.min >= -7){ //tight game, one score game
+                QLineSeries *series2 = new QLineSeries();
+                output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                               QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                for (int k = 0; k < 17; k++){
+                    //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                    series2->append(k*5, diffs->at(i).at(k+1));
+                }
+                //chart->addSeries(series2);
+            }
+            else if (story.yInt > 4.5){
+                if (story.last <= 7){
+                    if (story.max > 14){ //comebacks/bell curve shape/3 scores ahead
+                        QLineSeries *series2 = new QLineSeries();
+                        output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                       QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                        for (int k = 0; k < 17; k++){
+                            //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                            series2->append(k*5, diffs->at(i).at(k+1));
+                        }
+                        //chart->addSeries(series2);
+                    }
+                }
+                else if ((story.slope > 0.15 && story.slope <= 0.35) || (story.slope < 0.15 && story.slope > 0.1 &&
+                                                                        story.yInt > 5)){ //maintain early lead
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else if (story.slope <= 0.15){
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else{
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+             }
+             else if (story.slope > .4){ //comprehensive wins
+                QLineSeries *series2 = new QLineSeries();
+                output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                               QString::number(story.slope) + " " + QString::number(story.yInt));
+                for (int k = 0; k < 17; k++){
+                     //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                     series2->append(k*5, diffs->at(i).at(k+1));
+                }
+                //chart->addSeries(series2);
+             }
+             else if (story.min < -7){
+                if (story.yInt < -5){ //comeback to win
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else{ //early comeback to win
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+            }
+            else if (story.slope > 0.3){
+                if (story.min < 0){ //small early comeback, comfortable win
+                   QLineSeries *series2 = new QLineSeries();
+                   output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                  QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                   for (int k = 0; k < 17; k++){
+                       //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                       series2->append(k*5, diffs->at(i).at(k+1));
+                   }
+                   //chart->addSeries(series2);
+                }
+                else{
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+            }
+            else if (story.slope <= 0.1){
+                if (story.yInt < 2.5 && story.last > 7){ //tight game, pull away late
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else if (story.last > 7){ //tight up and down game - comfortable win
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else{ //tight game - narrow win
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+            }
+            else if (story.slope > 0.2){
+                if (story.last > 21){
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else if (story.yInt > 2){
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        //output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    //chart->addSeries(series2);
+                }
+                else{
+                    QLineSeries *series2 = new QLineSeries();
+                    output->append("\n\nMatch Found: Id: " + QString::number(diffs->at(i).at(0))  + " " +
+                                   QString::number(story.slope) + " " + QString::number(story.yInt) + "  ");
+                    for (int k = 0; k < 17; k++){
+                        output->append(" " + QString::number(diffs->at(i).at(k+1)));
+                        series2->append(k*5, diffs->at(i).at(k+1));
+                    }
+                    chart->addSeries(series2);
+                }
+            }
+        }
+    }*/
 
     /*VectorXf b(16);
     for (int a = 0; a < 16; a++)
@@ -512,27 +739,101 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
         std::cout << "\n\nThe least-squares solution is:\n"
                  << A.jacobiSvd(ComputeThinU | ComputeThinV).solve(b) << endl;
         //qDebug() << "DEBUG" << A.jacobiSvd(ComputeThinU | ComputeThinV).solve(b) << endl;
-    }
+    }*/
 
 
 
-    /*output->append("\n\n\nStory Comparison\n");
-    for (int i = 0; i < diffs->size(); i++){
-        for (int j = i + 1; j < diffs->size(); j++){
-            bool equal = true;
-            for (int k = 1; k < 17 && equal; k++){
-                if (diffs->at(i).at(k) != diffs->at(j).at(k))
-                    equal = false;
+    //output->append("\n\n\nSlope Comparison\n");
+    bool equal = true, first = false;
+    for (int parse = 0; parse < 3; parse++){
+        int numSimilar = 0;
+        int scoreDiff = parse * 3.5;
+        output->append("\n\nParse " + QString::number(parse) + "\n");
+        for (int i = 0; i < diffs->size() /*&& !first*/; i++){
+            QVector <int> match0 =  diffs->at(i);
+            for (int j = i + 1; j < diffs->size(); j++){
+                equal = true, first = false;
+                QVector <int> match1 =  diffs->at(j);
+                for (int k = 2, m = 2; equal && k < 18 && m < 18; k++, m++){
+                    int num0 = match0.at(k);
+                    if (parse > 0 && !first){
+                        for (int l = 0; l < (parse * 1.5) && !first; l++){
+                            int num1 = match1.at(m + l);
+                            //if ((num0 == num1) || (((num0 > 0 && num1 > 0) || (num0 > 0 && num1 > 0)) &&
+                            if (num0 >= (num1 - scoreDiff) && num0 <= (num1 + scoreDiff)){
+                                first = true;
+                                m += l;
+                            }
+                        }
+                        if (!first){
+                            first = true;
+                            equal = false;
+                        }
+                    }
+                    else{
+                        int num1 = match1.at(m);
+                        if (!(num0 >= (num1 - scoreDiff) && num0 <= (num1 + scoreDiff)))
+                            equal = false, first = true;
+                    }
+                }
+                if (equal){
+                    numSimilar++;
+                    output->append("\n\nMatch Found: Id0: " + QString::number(match0.at(0))  + "  Id1: " +
+                                   QString::number(match1.at(0)));
+                    if (parse >= 2 && numSimilar < 5){
+                        QLineSeries *series0 = new QLineSeries();
+                        QLineSeries *series1 = new QLineSeries();
+                        for (int k = 0; k < 17; k++){
+                            output->append("\n" + QString::number(match0.at(k+1)) + "  " + QString::number(match1.at(k+1)));
+                            series0->append(k*5, match0.at(k+1));
+                            series1->append(k*5, match1.at(k+1));
+                        }
+                        chart->addSeries(series0);
+                        chart->addSeries(series1);
+                        //first = true;
+                    }
+                }
             }
-            if (equal){
+        }
+        output->append("\n\nNumber of pairs of similar matches found for parse:  " + QString::number(numSimilar));
+    }
+            //bool equal = true;
+            //for (int k = 18; k < 19 && equal; k++){
+                /*if (diffs->at(i).at(17) >= diffs->at(j).at(17) - 0.5 && diffs->at(i).at(17) < diffs->at(j).at(17) + 0.5){
+                    //if (diffs->at(i).at(18) >= diffs->at(j).at(18) - 1 && diffs->at(i).at(18) < diffs->at(j).at(18) + 1){
+                        output->append("\nMatch Found: Id: " + QString::number(diffs->at(i).at(0)) + " and Id: " +
+                                QString::number(diffs->at(j).at(0)));
+                        QLineSeries *series = new QLineSeries();
+                        QLineSeries *series2 = new QLineSeries();
+                        for (int k = 0; k < 17; k++){
+                            output->append("\n " + QString::number(diffs->at(i).at(k+1)) + " " +
+                                                            QString::number(diffs->at(j).at(k+1)));
+                            series->append(k*5, diffs->at(j).at(k+1));
+                            series2->append(k*5, diffs->at(i).at(k+1));
+                        }
+                        chart->addSeries(series);
+                        chart->addSeries(series2);
+                        //found = true;
+                    //}
+                }*/
+            //}
+            /*if (equal){
                 output->append("\nMatch Found: Id: " + QString::number(diffs->at(i).at(0)) + " and Id: " +
                         QString::number(diffs->at(j).at(0)));
                 /*for (int k = 0; k < 17 && equal; k++)
                     output->append("\n " + QString::number(diffs->at(i).at(k)) + " " +
-                                    QString::number(diffs->at(j).at(k)));
-            }
-        }
-    }*/
+                                    QString::number(diffs->at(j).at(k)));*/
+           // }
+        //}
+
+
+    //}
+
+    chart->createDefaultAxes();
+    chart->setTitle("Game Stories");
+    chart->legend()->hide();
+
+    chart2 = new QChartView(chart);
 }
 
 QString DataAnalyser::tryConditions(QSqlQuery qry, QVector<Booking> *bookings)
