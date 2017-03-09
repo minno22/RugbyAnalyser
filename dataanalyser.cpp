@@ -741,14 +741,23 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
         //qDebug() << "DEBUG" << A.jacobiSvd(ComputeThinU | ComputeThinV).solve(b) << endl;
     }*/
 
-
+    //int idee = 500;
 
     //output->append("\n\n\nSlope Comparison\n");
     bool equal = true, first = false;
+    int scoreDiff = 0, timeDiff = 0;
     for (int parse = 0; parse < 3; parse++){
         int numSimilar = 0;
-        int scoreDiff = parse * 3.5;
-        output->append("\n\nParse " + QString::number(parse) + "\n");
+        if (parse == 1){
+            scoreDiff = 3;
+            timeDiff = 1;
+        }
+        else if (parse == 2)
+            scoreDiff = 5;
+
+        output->append("\n\n\nParse Number: " + QString::number(parse + 1) + "\nScore Difference Allowance: " +
+                            QString::number(scoreDiff) + "\nTime Difference Allowance: " +
+                            QString::number(timeDiff * 5) + "\n\n" );
         for (int i = 0; i < diffs->size() /*&& !first*/; i++){
             QVector <int> match0 =  diffs->at(i);
             for (int j = i + 1; j < diffs->size(); j++){
@@ -757,7 +766,7 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
                 for (int k = 2, m = 2; equal && k < 18 && m < 18; k++, m++){
                     int num0 = match0.at(k);
                     if (parse > 0 && !first){
-                        for (int l = 0; l < (parse * 1.5) && !first; l++){
+                        for (int l = 0; l < timeDiff && !first; l++){
                             int num1 = match1.at(m + l);
                             //if ((num0 == num1) || (((num0 > 0 && num1 > 0) || (num0 > 0 && num1 > 0)) &&
                             if (num0 >= (num1 - scoreDiff) && num0 <= (num1 + scoreDiff)){
@@ -776,27 +785,74 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
                             equal = false, first = true;
                     }
                 }
+
                 if (equal){
                     numSimilar++;
-                    output->append("\n\nMatch Found: Id0: " + QString::number(match0.at(0))  + "  Id1: " +
-                                   QString::number(match1.at(0)));
-                    if (parse >= 2 && numSimilar < 5){
-                        QLineSeries *series0 = new QLineSeries();
-                        QLineSeries *series1 = new QLineSeries();
-                        for (int k = 0; k < 17; k++){
-                            output->append("\n" + QString::number(match0.at(k+1)) + "  " + QString::number(match1.at(k+1)));
+                    output->append("\n\nSimilar Matches Found: Match 1 Id: " + QString::number(match0.at(0))  +
+                                   "  Match 2 Id: " + QString::number(match1.at(0)) + "\n");
+                    //idee = match0.at(0);
+                    QLineSeries *series0 = new QLineSeries();
+                    QLineSeries *series1 = new QLineSeries();
+
+                    for (int k = 0; k < 17; k++){
+                        output->append(" " + QString::number(match0.at(k+1)));
+                        if (parse < 2 /*match0.at(0) == 41*/ ){
                             series0->append(k*5, match0.at(k+1));
+                        }
+                    }
+                    output->append("\n");
+                    for (int k = 0; k < 17; k++){
+                        output->append(" " + QString::number(match1.at(k+1)));
+                        if (parse < 2 /*match0.at(0) == 41*/ ){
                             series1->append(k*5, match1.at(k+1));
                         }
-                        chart->addSeries(series0);
-                        chart->addSeries(series1);
-                        //first = true;
                     }
+                    chart->addSeries(series0);
+                    chart->addSeries(series1);
+                    //first = true;
                 }
             }
         }
         output->append("\n\nNumber of pairs of similar matches found for parse:  " + QString::number(numSimilar));
     }
+
+    /*for (int i = 0; i < diffs->size(); i++){
+        qDebug() << i << endl;
+        if (diffs->at(i).at(17) >= 0){
+            QVector <int> match0 =  diffs->at(i);
+            for (int j = i + 1; j < diffs->size(); j++){
+                int distance = 0;
+                if (diffs->at(j).at(17) >= 0){
+                    QVector <int> match1 =  diffs->at(j);
+                    for (int k = 1; k < 18; k++)
+                        distance += (match0.at(k) - match1.at(k));
+                    qDebug() << distance << endl;
+                    if (distance == 0){
+                        output->append("\n\nSimilar Matches Found: Match 1 Id: " + QString::number(match0.at(0))  +
+                                       "  Match 2 Id: " + QString::number(match1.at(0)) + "Distance: " +
+                                       QString::number(distance) + "\n");
+                        QLineSeries *series0 = new QLineSeries();
+                        QLineSeries *series1 = new QLineSeries();
+
+                        for (int k = 0; k < 17; k++){
+                            output->append(" " + QString::number(match0.at(k+1)));
+                            if (match0.at(0) == 244)
+                                series0->append(k*5, match0.at(k+1));
+                        }
+                        output->append("\n");
+                        for (int k = 0; k < 17; k++){
+                            output->append(" " + QString::number(match1.at(k+1)));
+                            if (match0.at(0) == 244)
+                                series1->append(k*5, match1.at(k+1));
+                        }
+                        chart->addSeries(series0);
+                        chart->addSeries(series1);
+                    }
+                }
+            }
+        }
+    }*/
+
             //bool equal = true;
             //for (int k = 18; k < 19 && equal; k++){
                 /*if (diffs->at(i).at(17) >= diffs->at(j).at(17) - 0.5 && diffs->at(i).at(17) < diffs->at(j).at(17) + 0.5){
