@@ -19,11 +19,14 @@ public:
     };
 
     DataAnalyser();
-    QString analyse(QSqlQuery qry, int idx, int num, QVector <int> * arr);
+    QString analyse(QSqlQuery qry, int idx, int num);
     QString compare(QString str1, QString str2);
     QString analyseStories(int totMatches, QVector <QString> queries);
-    QString analyseConditions(int num, QVector<QString> queries, QVector<int> *arr);
+    QString analyseConditions(int num, QVector<QString> queries);
     QChartView* getChart();
+    void setPieChart1();
+    QChartView* getChart1();
+    void resetArray();
 
 private:
     double const scale = 0.01;
@@ -51,12 +54,13 @@ private:
         double slope, yInt;
     };
 
-    QChartView *chart2;
+    QChartView *chart1, *chart2;
+    QVector<int> arr;
 
-    QString analyseTries(QSqlQuery qry, int totMatches, QVector <int> * arr);
+    QString analyseTries(QSqlQuery qry, int totMatches);
     QString analyseMatches(QSqlQuery qry);
-    QString analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totMatches, QVector <int> * arr);
-    QString analyseBookings(QSqlQuery qry, int totMatches, QVector <int> * arr);
+    QString analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totMatches);
+    QString analyseBookings(QSqlQuery qry, int totMatches);
     QString logMatches(int id, QVector <Score> home, QVector <Score> away);
     void organiseMatches(QVector<Match> *matches);
     QVector <Score> sortMatches(QVector <Score> scores, int left, int right);

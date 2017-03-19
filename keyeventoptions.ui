@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>738</width>
-    <height>403</height>
+    <width>322</width>
+    <height>405</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QPushButton" name="btnAnalyse">
    <property name="geometry">
     <rect>
-     <x>70</x>
+     <x>90</x>
      <y>300</y>
      <width>101</width>
      <height>31</height>
@@ -158,117 +158,24 @@
     <string/>
    </property>
   </widget>
-  <widget class="QLabel" name="lblCompare">
+  <widget class="QLabel" name="lblHeader">
    <property name="geometry">
     <rect>
-     <x>430</x>
+     <x>10</x>
      <y>10</y>
-     <width>221</width>
+     <width>301</width>
      <height>51</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <pointsize>16</pointsize>
+     <pointsize>24</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
     </font>
    </property>
    <property name="text">
-    <string>Compare 2 Data Sets</string>
-   </property>
-  </widget>
-  <widget class="QTextBrowser" name="tbData1">
-   <property name="geometry">
-    <rect>
-     <x>340</x>
-     <y>90</y>
-     <width>171</width>
-     <height>171</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QTextBrowser" name="tbData2">
-   <property name="geometry">
-    <rect>
-     <x>540</x>
-     <y>90</y>
-     <width>171</width>
-     <height>171</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="lblData1">
-   <property name="geometry">
-    <rect>
-     <x>350</x>
-     <y>60</y>
-     <width>121</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Data Set 1</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="lblData2">
-   <property name="geometry">
-    <rect>
-     <x>550</x>
-     <y>60</y>
-     <width>121</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Data Set 2</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btnData1">
-   <property name="geometry">
-    <rect>
-     <x>360</x>
-     <y>270</y>
-     <width>131</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Set Data Set 1</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btnData2">
-   <property name="geometry">
-    <rect>
-     <x>560</x>
-     <y>270</y>
-     <width>131</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Set Data Set 2</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btnCompare">
-   <property name="geometry">
-    <rect>
-     <x>470</x>
-     <y>330</y>
-     <width>121</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Compare</string>
+    <string>Key Event Analysis</string>
    </property>
   </widget>
  </widget>

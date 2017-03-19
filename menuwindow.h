@@ -22,6 +22,10 @@ private slots:
 
     void on_btnViewDb_clicked();
 
+    void on_btnUpdateDb_clicked();
+
+    void on_btnStories_clicked();
+
 private:
     Ui::MenuWindow *ui;
     KeyEventOptions keo;

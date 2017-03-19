@@ -26,3 +26,13 @@ void MenuWindow::on_btnViewDb_clicked()
     vdb.setup(0);
     vdb.show();
 }
+
+void MenuWindow::on_btnUpdateDb_clicked()
+{
+    system("C:\\Users\\Niall\\Documents\\LM051\\YR4\\FYP\\Project\\RugbyAnalyser\\Scripts\\UpdateDB.py");
+}
+
+void MenuWindow::on_btnStories_clicked()
+{
+    keo.analyseStories();
+}

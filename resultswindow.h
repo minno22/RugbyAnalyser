@@ -18,7 +18,8 @@ public:
     explicit ResultsWindow(QWidget *parent = 0);
     ~ResultsWindow();
     void setText(QString text);
-    void setGraph(QVector <int> * arr, QChartView * chartView1);
+    void setGraph0(QChartView *chartView0, QChartView * chartView1);
+    void setGraph1(QChartView *chartView0);
 
 private:
     Ui::ResultsWindow *ui;

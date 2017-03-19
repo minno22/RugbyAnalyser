@@ -8,13 +8,23 @@ KeyEventOptions::KeyEventOptions(QWidget *parent) :
 {
     ui->setupUi(this);
     populateDDL();
-    for (int i = 0; i < 10; i++)
-        arr.append(0);
 }
 
 KeyEventOptions::~KeyEventOptions()
 {
     delete ui;
+}
+
+void KeyEventOptions::analyseStories()
+{
+    int num = getNumMatches("All");
+    QVector <QString> queries;
+    for (int i = 1; i < 4; i++){
+        QString query = qb.getQuery(i, "All", 0, 0, 0);
+        queries.push_back(query);
+    }
+    QString result = da.analyseStories(num, queries);
+    displayResults(1, result);
 }
 
 void KeyEventOptions::on_btnAnalyse_clicked()
@@ -25,18 +35,29 @@ void KeyEventOptions::on_btnAnalyse_clicked()
     ds.within = ui->cbWithin->currentIndex();
     ds.time = ui->cbTime->currentIndex();
 
+    da.resetArray();
     QString result = analyse(ds);
+    displayResults(0, result);
+}
 
+void KeyEventOptions::displayResults(int num, QString result)
+{
     qDebug() << result << endl;
     rw.setText(result);
+    da.setPieChart1();
     QChartView *chartView = da.getChart();
-    rw.setGraph(&arr, chartView);
+    if (num == 0){
+        QChartView *chartView0 = da.getChart1();
+        rw.setGraph0(chartView0, chartView);
+    }
+    else
+        rw.setGraph1(chartView);
     rw.show();
 }
 
 void KeyEventOptions::populateDDL()
 {
-    events << "Matches" << "Tries" << "Penalties" << "Drop Goals" << "Bookings" << "All Scores" << "Game Stories";
+    events << "Matches" << "Tries" << "Penalties" << "Drop Goals" << "Bookings" << "All Scores";
     comps = getComps();
     withins << "All Time" << "Last Week" << "Last 30 Days" << "Last 6 Months" << "Last Year";
     times << "Full Match" << "First Half" << "Second Half" << "0-20 Minutes" << "20-40 Minutes"
@@ -83,7 +104,7 @@ QStringList KeyEventOptions::getComps()
     return comps;
 }
 
-void KeyEventOptions::setDataSet(int num)
+/*void KeyEventOptions::setDataSet(int num)
 {
     int event = ui->cbEvent->currentIndex();
     QString comp = ui->cbComp->currentText();
@@ -110,7 +131,7 @@ void KeyEventOptions::setDataSet(int num)
 
         ui->tbData2->setText(output);
     }
-}
+}*/
 
 QString KeyEventOptions::analyse(DataAnalyser::dataSet data)
 {
@@ -124,7 +145,7 @@ QString KeyEventOptions::analyse(DataAnalyser::dataSet data)
             query = qb.getQuery(i, data.comp, data.within, data.time, 0);
             qdb.setQuery(query);
             qry = qdb.executeQuery();
-            result += da.analyse(qry, i, num, &arr) + "\n\n";
+            result += da.analyse(qry, i, num) + "\n\n";
             qry.clear();
         }
     }break;
@@ -136,37 +157,29 @@ QString KeyEventOptions::analyse(DataAnalyser::dataSet data)
             query = qb.getQuery(i, data.comp, data.within, data.time, 1);
             queries.push_back(query);
         }
-        result = da.analyseConditions(num, queries, &arr) + "\n\n";
+        result = da.analyseConditions(num, queries) + "\n\n";
     }break;
     case 5: {
         for (int i = 1; i < 4; i++){
             query = qb.getQuery(i, data.comp, data.within, data.time, 0);
             qdb.setQuery(query);
             qry = qdb.executeQuery();
-            result += da.analyse(qry, i, num, &arr) + "\n\n";
+            result += da.analyse(qry, i, num) + "\n\n";
             qry.clear();
         }
-    }break;
-    case 6: {
-        QVector <QString> queries;
-        for (int i = 1; i < 4; i++){
-            query = qb.getQuery(i, data.comp, data.within, data.time, 0);
-            queries.push_back(query);
-        }
-        result = da.analyseStories(num, queries);
     }break;
     default: {
         query = qb.getQuery(data.event, data.comp, data.within, data.time, 0);
         qdb.setQuery(query);
         qry = qdb.executeQuery();
-        result = da.analyse(qry, data.event, num, &arr);
+        result = da.analyse(qry, data.event, num);
     }break;
     }
 
     return result;
 }
 
-void KeyEventOptions::on_btnData1_clicked()
+/*void KeyEventOptions::on_btnData1_clicked()
 {   
     setDataSet(1);
 }
@@ -193,4 +206,4 @@ void KeyEventOptions::on_btnCompare_clicked()
     }
     else
         qDebug() << "Both data sets must be set for comparison" << endl;
-}
+}*/

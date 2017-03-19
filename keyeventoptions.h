@@ -19,15 +19,16 @@ public:
     explicit KeyEventOptions(QWidget *parent = 0);
     ~KeyEventOptions();
 
+    void analyseStories();
 
 private slots:
     void on_btnAnalyse_clicked();
 
-    void on_btnData1_clicked();
+    /*void on_btnData1_clicked();
 
     void on_btnData2_clicked();
 
-    void on_btnCompare_clicked();
+    void on_btnCompare_clicked();*/
 
 private:
     Ui::KeyEventOptions *ui;
@@ -39,12 +40,13 @@ private:
     ResultsWindow rw;
     QStringList events, comps, withins, times;
     DataAnalyser::dataSet Set1, Set2;
-    QVector <int> arr;
+    //QVector <int> arr;
 
     int getNumMatches(QString comp);
     QStringList getComps();
-    void setDataSet(int num);
+    //void setDataSet(int num);
     QString analyse(DataAnalyser::dataSet data);
+    void displayResults(int num, QString result);
 };
 
 #endif // KEYEVENTOPTIONS_H

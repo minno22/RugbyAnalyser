@@ -3,6 +3,11 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
 #include <QtCharts/QLineSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QLegend>
+#include <QtCharts/QBarCategoryAxis>
+
 //#include <Eigen/Dense>
 //#include <iostream>
 //#include <iomanip>
@@ -11,22 +16,23 @@
 
 DataAnalyser::DataAnalyser()
 {
-
+    for (int i = 0; i < 10; i++)
+        arr.append(0);
 }
 
-QString DataAnalyser::analyse(QSqlQuery qry, int idx, int num, QVector <int> * arr)
+QString DataAnalyser::analyse(QSqlQuery qry, int idx, int num)
 {
     QString result;
     switch (idx) {
     case 0: result += analyseMatches(qry);
         break;
-    case 1: result = analyseTries(qry, num, arr);
+    case 1: result = analyseTries(qry, num);
         break;
-    case 2: result = analysePenaltiesDropGoals(qry, 0, num, arr);
+    case 2: result = analysePenaltiesDropGoals(qry, 0, num);
         break;
-    case 3: result = analysePenaltiesDropGoals(qry, 1, num, arr);
+    case 3: result = analysePenaltiesDropGoals(qry, 1, num);
         break;
-    case 4: result = analyseBookings(qry, num, arr);
+    case 4: result = analyseBookings(qry, num);
         break;
     default:
         break;
@@ -34,21 +40,21 @@ QString DataAnalyser::analyse(QSqlQuery qry, int idx, int num, QVector <int> * a
     return result;
 }
 
-QString DataAnalyser::analyseTries(QSqlQuery qry, int totMatches, QVector <int> * arr)
+QString DataAnalyser::analyseTries(QSqlQuery qry, int totMatches)
 {
     QString result;
-
+    //qDebug() << "DEBUG!!!!!!" << endl;
     int num = 0, noMatches = 0, matchIdOld, matchIdNew, homeTries = 0, converted = 0, penalty = 0, no = 0, oldNo, newNo;
     while (qry.next()) {
         int a = qry.value(12).toInt();
         int b = (int)(a/10);
-        int x = arr->at(b) + 1;
-        arr->removeAt(b);
-        arr->insert(b, x);
+        int x = arr.at(b) + 1;
+        arr.removeAt(b);
+        arr.insert(b, x);
         if (b > 8){
-            int x = arr->at(8) + 1;
-            arr->removeAt(8);
-            arr->insert(8, x);
+            int x = arr.at(8) + 1;
+            arr.removeAt(8);
+            arr.insert(8, x);
         }
         num++;
 
@@ -79,7 +85,7 @@ QString DataAnalyser::analyseTries(QSqlQuery qry, int totMatches, QVector <int> 
                 "\nTotal number of matches in query: " + QString::number(no) +
                 "\nTotal number of tries scored: " + QString::number(num) + "\n\n";
     for (int i = 1; i < 10; i++){
-        int n = arr->at(i-1);
+        int n = arr.at(i-1);
         double y = floor(((double)n/num * 100) / scale + 0.5) * scale;
         if (i != 9){
             result += "Tries scored between " + QString::number(i-1) + "0 minutes and " + QString::number(i) +
@@ -159,7 +165,7 @@ QString DataAnalyser::analyseMatches(QSqlQuery qry)
     return result;
 }
 
-QString DataAnalyser::analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totMatches, QVector <int> * arr)
+QString DataAnalyser::analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totMatches)
 {
     QString big, small;
     if (eve == 0){
@@ -177,13 +183,13 @@ QString DataAnalyser::analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totM
 
         int a = qry.value(12).toInt();
         int b = (int)(a/10);
-        int x = arr->at(b) + 1;
-        arr->removeAt(b);
-        arr->insert(b, x);
+        int x = arr.at(b) + 1;
+        arr.removeAt(b);
+        arr.insert(b, x);
         if (b > 8){
-            int x = arr->at(8) + 1;
-            arr->removeAt(8);
-            arr->insert(8, x);
+            int x = arr.at(8) + 1;
+            arr.removeAt(8);
+            arr.insert(8, x);
         }
 
         matchIdNew = qry.value(11).toInt();
@@ -209,7 +215,7 @@ QString DataAnalyser::analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totM
             + "\nTotal number of matches in query: " + QString::number(no) +
                 "\nTotal number of " + small + " scored: " + QString::number(num) + "\n\n";
     for (int i = 1; i < 10; i++){
-        int n = arr->at(i-1);
+        int n = arr.at(i-1);
         double y = floor(((double)n/num * 100) / scale + 0.5) * scale;
         if (i != 9){
             result += big + " scored between " + QString::number(i-1) + "0 minutes and " + QString::number(i) +
@@ -236,7 +242,7 @@ QString DataAnalyser::analysePenaltiesDropGoals(QSqlQuery qry, int eve, int totM
     return result;
 }
 
-QString DataAnalyser::analyseBookings(QSqlQuery qry, int totMatches, QVector<int> *arr)
+QString DataAnalyser::analyseBookings(QSqlQuery qry, int totMatches)
 {
     QString result;
     int num = 0, noMatches = 0, matchIdOld, matchIdNew, homeBookings = 0, yellows = 0, homeYellows = 0, homeReds = 0,
@@ -246,13 +252,13 @@ QString DataAnalyser::analyseBookings(QSqlQuery qry, int totMatches, QVector<int
 
         int a = qry.value(12).toInt();
         int b = (int)(a/10);
-        int x = arr->at(b) + 1;
-        arr->removeAt(b);
-        arr->insert(b, x);
+        int x = arr.at(b) + 1;
+        arr.removeAt(b);
+        arr.insert(b, x);
         if (b > 8){
-            int x = arr->at(8) + 1;
-            arr->removeAt(8);
-            arr->insert(8, x);
+            int x = arr.at(8) + 1;
+            arr.removeAt(8);
+            arr.insert(8, x);
         }
 
         matchIdNew = qry.value(11).toInt();
@@ -289,7 +295,7 @@ QString DataAnalyser::analyseBookings(QSqlQuery qry, int totMatches, QVector<int
             "\nTotal number of matches in query: " + QString::number(no) +
                 "\nTotal number of bookings: " + QString::number(num) + "\n\n";
     for (int i = 1; i < 10; i++){
-        int n = arr->at(i-1);
+        int n = arr.at(i-1);
         double y = floor(((double)n/num * 100) / scale + 0.5) * scale;
         if (i != 9){
             result += "Bookings between " + QString::number(i-1) + "0 minutes and " + QString::number(i) +
@@ -744,7 +750,7 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
     //int idee = 500;
 
     //output->append("\n\n\nSlope Comparison\n");
-    bool equal = true, first = false;
+    /*bool equal = true, first = false;
     int scoreDiff = 0, timeDiff = 0;
     for (int parse = 0; parse < 3; parse++){
         int numSimilar = 0;
@@ -758,7 +764,7 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
         output->append("\n\n\nParse Number: " + QString::number(parse + 1) + "\nScore Difference Allowance: " +
                             QString::number(scoreDiff) + "\nTime Difference Allowance: " +
                             QString::number(timeDiff * 5) + "\n\n" );
-        for (int i = 0; i < diffs->size() /*&& !first*/; i++){
+        for (int i = 0; i < diffs->size() /*&& !first; i++){
             QVector <int> match0 =  diffs->at(i);
             for (int j = i + 1; j < diffs->size(); j++){
                 equal = true, first = false;
@@ -796,14 +802,14 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
 
                     for (int k = 0; k < 17; k++){
                         output->append(" " + QString::number(match0.at(k+1)));
-                        if (parse < 2 /*match0.at(0) == 41*/ ){
+                        if (parse < 2 /*match0.at(0) == 41 ){
                             series0->append(k*5, match0.at(k+1));
                         }
                     }
                     output->append("\n");
                     for (int k = 0; k < 17; k++){
                         output->append(" " + QString::number(match1.at(k+1)));
-                        if (parse < 2 /*match0.at(0) == 41*/ ){
+                        if (parse < 2 /*match0.at(0) == 41 ){
                             series1->append(k*5, match1.at(k+1));
                         }
                     }
@@ -814,44 +820,54 @@ void DataAnalyser::groupStories(QString *output, QVector<QVector <int> > *diffs)
             }
         }
         output->append("\n\nNumber of pairs of similar matches found for parse:  " + QString::number(numSimilar));
-    }
-
-    /*for (int i = 0; i < diffs->size(); i++){
-        qDebug() << i << endl;
+    }*/
+    int numFound = 0;
+    for (int i = 0; i < diffs->size(); i++){
         if (diffs->at(i).at(17) >= 0){
             QVector <int> match0 =  diffs->at(i);
             for (int j = i + 1; j < diffs->size(); j++){
                 int distance = 0;
                 if (diffs->at(j).at(17) >= 0){
                     QVector <int> match1 =  diffs->at(j);
-                    for (int k = 1; k < 18; k++)
-                        distance += (match0.at(k) - match1.at(k));
+                    for (int k = 1; k < 18; k++){
+                        int num1 = match0.at(k);
+                        int num2 = match1.at(k);
+                        if (num1 > num2)
+                            distance += (num1 - num2);
+                        else if (num2 > num1)
+                            distance += (num2 - num1);
+                    }
                     qDebug() << distance << endl;
-                    if (distance == 0){
-                        output->append("\n\nSimilar Matches Found: Match 1 Id: " + QString::number(match0.at(0))  +
-                                       "  Match 2 Id: " + QString::number(match1.at(0)) + "Distance: " +
-                                       QString::number(distance) + "\n");
-                        QLineSeries *series0 = new QLineSeries();
-                        QLineSeries *series1 = new QLineSeries();
+                    if (distance <= 20){
+                        numFound++;
+                        //if (numFound == 10){
+                            output->append("\n\nSimilar Matches Found: Match 1 Id: " + QString::number(match0.at(0))  +
+                                           "  Match 2 Id: " + QString::number(match1.at(0)) + "Distance: " +
+                                           QString::number(distance) + "\n");
+                            QLineSeries *series0 = new QLineSeries();
+                            QLineSeries *series1 = new QLineSeries();
 
-                        for (int k = 0; k < 17; k++){
-                            output->append(" " + QString::number(match0.at(k+1)));
-                            if (match0.at(0) == 244)
-                                series0->append(k*5, match0.at(k+1));
-                        }
-                        output->append("\n");
-                        for (int k = 0; k < 17; k++){
-                            output->append(" " + QString::number(match1.at(k+1)));
-                            if (match0.at(0) == 244)
-                                series1->append(k*5, match1.at(k+1));
-                        }
-                        chart->addSeries(series0);
-                        chart->addSeries(series1);
+                            for (int k = 0; k < 17; k++){
+                                output->append(" " + QString::number(match0.at(k+1)));
+                                //if (match0.at(0) == 244)
+                                    series0->append(k*5, match0.at(k+1));
+                            }
+                            output->append("\n");
+                            for (int k = 0; k < 17; k++){
+                                output->append(" " + QString::number(match1.at(k+1)));
+                                //if (match0.at(0) == 244)
+                                    series1->append(k*5, match1.at(k+1));
+                            }
+                            chart->addSeries(series0);
+                            chart->addSeries(series1);
+                        //}
                     }
                 }
             }
         }
-    }*/
+    }
+    output->append("\n\n\nNumber of similar stories found using sum of distances method (within 20 points): " +
+                        QString::number(numFound));
 
             //bool equal = true;
             //for (int k = 18; k < 19 && equal; k++){
@@ -995,6 +1011,32 @@ void DataAnalyser::setPieChart(double perc)
     chart2 = new QChartView(chart);
 }
 
+void DataAnalyser::setPieChart1()
+{
+    QBarSet *set0 = new QBarSet("Event");
+    QStringList categories;
+    for (int i = 0; i < arr.size(); i++){
+        *set0 << arr.at(i);
+        QString str;
+        str.append(QString::number(i) + "0-" + QString::number(i+1) + "0");
+        categories << str;
+    }
+    QBarSeries *series = new QBarSeries();
+    series->append(set0);
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Match Time Analysis");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    QBarCategoryAxis *axis = new QBarCategoryAxis();
+    axis->append(categories);
+    chart->createDefaultAxes();
+    chart->setAxisX(axis, series);
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    chart1 = new QChartView(chart);
+}
+
 QString DataAnalyser::analyseStories(int totMatches, QVector<QString> queries)
 {
     int oldNo, newNo;
@@ -1110,7 +1152,7 @@ QString DataAnalyser::analyseStories(int totMatches, QVector<QString> queries)
     return result;
 }
 
-QString DataAnalyser::analyseConditions(int num, QVector<QString> queries, QVector <int> * arr)
+QString DataAnalyser::analyseConditions(int num, QVector<QString> queries)
 {
     QVector <Booking> bookings;
     QString result;
@@ -1122,7 +1164,7 @@ QString DataAnalyser::analyseConditions(int num, QVector<QString> queries, QVect
         qry = qdb.executeQuery();
 
         switch (i) {
-        case 0: result += analyseBookings(qry, num, arr);
+        case 0: result += analyseBookings(qry, num);
             break;
         case 1: result += tryConditions(qry, &bookings);
             break;
@@ -1182,9 +1224,20 @@ QChartView *DataAnalyser::getChart()
     return chart2;
 }
 
-QString DataAnalyser::compare(QString str1, QString str2)
+QChartView *DataAnalyser::getChart1()
+{
+    return chart1;
+}
+
+void DataAnalyser::resetArray()
+{
+    for (int i = 0; i < 10; i++)
+        arr.replace(i, 0);
+}
+
+/*QString DataAnalyser::compare(QString str1, QString str2)
 {
     QString result = "Comparison of Data Sets\n\n" + str1 + "\n\n\n" + str2;
     return result;
-}
+}*/
 
