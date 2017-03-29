@@ -5,12 +5,12 @@ QueryDB::QueryDB()
 
 }
 
-void QueryDB::setQuery(QString qryString)
+void QueryDB::setQuery(QString qryString) //set the sql query string
 {
     this->qryString = qryString;
 }
 
-QSqlQuery QueryDB::executeQuery()
+QSqlQuery QueryDB::executeQuery() //execute the sql query on the database and return the results
 {
     QString serverName = "LOCALHOST\\SQLEXPRESS";
     QString dbName = "RugbyMatches";

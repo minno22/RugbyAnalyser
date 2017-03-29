@@ -37,3 +37,12 @@ FORMS    += menuwindow.ui \
     keyeventoptions.ui \
     resultswindow.ui \
     viewdb.ui
+
+DISTFILES += \
+    Assets/Background1.jpg \
+    Scripts/BuildDB.py \
+    Scripts/Log_Match.py \
+    Scripts/UpdateDB.py
+
+RESOURCES += \
+    resources.qrc

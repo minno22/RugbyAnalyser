@@ -14,12 +14,12 @@ ResultsWindow::~ResultsWindow()
     delete ui;
 }
 
-void ResultsWindow::setText(QString text)
+void ResultsWindow::setText(QString text) //set the output string as the text
 {
     ui->textBrowser->setText(text);
 }
 
-void ResultsWindow::setGraph0(QChartView *chartView0, QChartView *chartView1)
+void ResultsWindow::setGraph0(QChartView *chartView0, QChartView *chartView1) //set two charts
 {
     ui->verticalLayout->removeWidget(chartView);
     ui->verticalLayout->removeWidget(chartView2);
@@ -33,7 +33,7 @@ void ResultsWindow::setGraph0(QChartView *chartView0, QChartView *chartView1)
     ui->verticalLayout->addWidget(chartView2);
 }
 
-void ResultsWindow::setGraph1(QChartView *chartView0)
+void ResultsWindow::setGraph1(QChartView *chartView0) //set one chart
 {
     ui->verticalLayout->removeWidget(chartView);
     ui->verticalLayout->removeWidget(chartView2);

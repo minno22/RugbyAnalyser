@@ -17,63 +17,77 @@ KeyEventOptions::~KeyEventOptions()
 
 void KeyEventOptions::analyseStories()
 {
-    int num = getNumMatches("All");
+    QApplication::setOverrideCursor(Qt::WaitCursor); //changes mouse icon to wait
+    result = "";
+    int num = getNumMatches("All Competitions"); //get number of matches in database
     QVector <QString> queries;
-    for (int i = 1; i < 4; i++){
-        QString query = qb.getQuery(i, "All", 0, 0, 0);
-        queries.push_back(query);
+    for (int i = 1; i < 4; i++){ //loop to get required sql queries
+        QString query = qb.getQuery(i, "All", 0, 0, 0); //gets sql query
+        queries.push_back(query); //add query to vector of queries
     }
-    QString result = da.analyseStories(num, queries);
-    displayResults(1, result);
+    da.analyseStories(num, queries, &result); //calls data analyser to analyse game stories and generate an output string
+    QApplication::restoreOverrideCursor(); //resets mouse icon
+    displayResults(1);
 }
 
 void KeyEventOptions::on_btnAnalyse_clicked()
 {
-    DataAnalyser::dataSet ds;
+    QApplication::setOverrideCursor(Qt::WaitCursor); //changes mouse icon to wait
+    result = "";
     ds.event = ui->cbEvent->currentIndex();
     ds.comp = ui->cbComp->currentText();
+    ds.compare = ui->cbCompare->currentText();
     ds.within = ui->cbWithin->currentIndex();
     ds.time = ui->cbTime->currentIndex();
 
-    da.resetArray();
-    QString result = analyse(ds);
-    displayResults(0, result);
+    da.resetArray(1); //Set all indexes of array to zero
+    analyse(); // pass selected analysis options to analyse to select appropriate analysis function/s
+    QApplication::restoreOverrideCursor(); //resets mouse icon
+    displayResults(0);
 }
 
-void KeyEventOptions::displayResults(int num, QString result)
+void KeyEventOptions::displayResults(int num) //configure and display results window object
 {
     qDebug() << result << endl;
-    rw.setText(result);
-    da.setPieChart1();
-    QChartView *chartView = da.getChart();
-    if (num == 0){
-        QChartView *chartView0 = da.getChart1();
-        rw.setGraph0(chartView0, chartView);
+    rw.setText(result); //add the result text to the window
+    if (ds.event == 0)
+        da.setPieChartMatches();
+    else if (ds.event == 5)
+        da.setScoresChart();
+    QChartView *chartView = da.getChart(); //get chart from data analyser
+    if (num == 0 && ds.event != 0 && ds.event != 5){ //if more than one chart to be added to window
+        da.setChart1(events.at(ds.event)); //configure chart in data analyser
+        QChartView *chartView0 = da.getChart1(); //get chart from data analyser
+        rw.setGraph0(chartView0, chartView); //add graph to window
     }
     else
-        rw.setGraph1(chartView);
-    rw.show();
+        rw.setGraph1(chartView); //add graph to window
+    rw.show(); //display window
 }
 
-void KeyEventOptions::populateDDL()
+void KeyEventOptions::populateDDL() //configure the drop down lists in the key event options window
 {
+    //add strings/options to QStringLists
     events << "Matches" << "Tries" << "Penalties" << "Drop Goals" << "Bookings" << "All Scores";
-    comps = getComps();
+    comps << "All Competitions" << getComps();
+    comps2 << "None" << getComps();
     withins << "All Time" << "Last Week" << "Last 30 Days" << "Last 6 Months" << "Last Year";
     times << "Full Match" << "First Half" << "Second Half" << "0-20 Minutes" << "20-40 Minutes"
             << "40-60 Minutes" << "60-80 Minutes";
+    //add QStringLists to drop down lists
     ui->cbEvent->insertItems(0, events);
     ui->cbComp->insertItems(0, comps);
+    ui->cbCompare->insertItems(0, comps2);
     ui->cbWithin->insertItems(0, withins);
     ui->cbTime->insertItems(0, times);
 }
 
-int KeyEventOptions::getNumMatches(QString comp)
+int KeyEventOptions::getNumMatches(QString comp) //get the number of matches in a particular competition
 {
     int no = 0, oldNo, newNo;
-    QString query = qb.getQuery(0, comp, 0, 0, 0);
-    qdb.setQuery(query);
-    QSqlQuery qry = qdb.executeQuery();
+    QString query = qb.getQuery(0, comp, 0, 0, 0);  //get the sql query from query builder object
+    qdb.setQuery(query); //set the sql query in the query DB object
+    QSqlQuery qry = qdb.executeQuery(); //execute the query in the query DB object to obtain QSqlQuery object
     while (qry.next()) {
         newNo = qry.value(0).toInt();
         if (newNo != oldNo){
@@ -84,17 +98,16 @@ int KeyEventOptions::getNumMatches(QString comp)
     return no;
 }
 
-QStringList KeyEventOptions::getComps()
+QStringList KeyEventOptions::getComps() //get list of competitions from database
 {
     QStringList comps;
-    comps << "All";
-    QString query = qb.getUnique(0);
+    QString query = qb.getUnique(0); //get the sql query string
     qdb.setQuery(query);
     QSqlQuery qry = qdb.executeQuery();
     while (qry.next()) {
        QString comp = qry.value(0).toString();
        bool found = false;
-       for (int i = 0; i < comps.size() && !found; i++)
+       for (int i = 0; i < comps.size() && !found; i++) //ensure no duplicate strings
            if(comps.at(i) == comp)
                found = true;
        if (!found){
@@ -104,106 +117,75 @@ QStringList KeyEventOptions::getComps()
     return comps;
 }
 
-/*void KeyEventOptions::setDataSet(int num)
+void KeyEventOptions::analyse()
 {
-    int event = ui->cbEvent->currentIndex();
-    QString comp = ui->cbComp->currentText();
-    int within = ui->cbWithin->currentIndex();
-    int time = ui->cbTime->currentIndex();
-    QString output = events.at(event) + "\n\n" + comp + "\n\n" + withins.at(within) + "\n\n" + times.at(time)
-                        + "\n\n";
-
-    if (num == 1){
-        Set1.event = event;
-        Set1.comp = comp;
-        Set1.within = within;
-        Set1.time = time;
-        Set1.set = true;
-
-        ui->tbData1->setText(output);
+    QString comp;
+    int iterations = 1;
+    if (ds.compare != "None"){
+        iterations = 2;
     }
-    else{
-        Set2.event = event;
-        Set2.comp = comp;
-        Set2.within = within;
-        Set2.time = time;
-        Set2.set = true;
 
-        ui->tbData2->setText(output);
-    }
-}*/
+    for (int i = 0; i < iterations; i++){
+        if (i == 0)
+            comp = ds.comp;
+        else
+            comp = ds.compare;
+        result += comp + ": ";
+        int num = getNumMatches(comp);
+        QString query;
+        QSqlQuery qry;
 
-QString KeyEventOptions::analyse(DataAnalyser::dataSet data)
-{
-    int num = getNumMatches(data.comp);
-    QString query, result;
-    QSqlQuery qry;
-
-    switch(data.event){
-    case 0: {
-        for (int i = 0; i < 5; i++){
-            query = qb.getQuery(i, data.comp, data.within, data.time, 0);
-            qdb.setQuery(query);
-            qry = qdb.executeQuery();
-            result += da.analyse(qry, i, num) + "\n\n";
-            qry.clear();
-        }
-    }break;
-    case 4: {
-        QVector <QString> queries;
-        query = qb.getQuery(4, data.comp, data.within, data.time, 0);
-        queries.push_back(query);
-        for (int i = 1; i < 4; i++){
-            query = qb.getQuery(i, data.comp, data.within, data.time, 1);
+        switch(ds.event){
+        case 0: { //analyse matches
+            for (int i = 0; i < 5; i++){
+                query = qb.getQuery(i, comp, ds.within, ds.time, 0);
+                qdb.setQuery(query);
+                qry = qdb.executeQuery();
+                da.resetArray(0);
+                da.analyse(qry, i, num, &result);
+                result += "\n\n\n";
+                qry.clear();
+            }
+        }break; //analyse bookings
+        case 4: {
+            QVector <QString> queries;
+            query = qb.getQuery(4, comp, ds.within, ds.time, 0);
             queries.push_back(query);
-        }
-        result = da.analyseConditions(num, queries) + "\n\n";
-    }break;
-    case 5: {
-        for (int i = 1; i < 4; i++){
-            query = qb.getQuery(i, data.comp, data.within, data.time, 0);
+            for (int i = 1; i < 4; i++){
+                query = qb.getQuery(i, comp, ds.within, ds.time, 1);
+                queries.push_back(query);
+            }
+            result += "\n\n";
+            da.analyseConditions(num, queries, &result);
+        }break;
+        case 5: { //analyse all scores
+            for (int i = 1; i < 4; i++){
+                query = qb.getQuery(i, comp, ds.within, ds.time, 0);
+                qdb.setQuery(query);
+                qry = qdb.executeQuery();
+                da.resetArray(0);
+                da.analyse(qry, i, num, &result);
+                result += "\n\n";
+                qry.clear();
+            }
+        }break;
+        default: { //penalties, tries, drop goals
+            query = qb.getQuery(ds.event, comp, ds.within, ds.time, 0);
             qdb.setQuery(query);
             qry = qdb.executeQuery();
-            result += da.analyse(qry, i, num) + "\n\n";
-            qry.clear();
-        }
-    }break;
-    default: {
-        query = qb.getQuery(data.event, data.comp, data.within, data.time, 0);
-        qdb.setQuery(query);
-        qry = qdb.executeQuery();
-        result = da.analyse(qry, data.event, num);
-    }break;
-    }
-
-    return result;
-}
-
-/*void KeyEventOptions::on_btnData1_clicked()
-{   
-    setDataSet(1);
-}
-
-void KeyEventOptions::on_btnData2_clicked()
-{
-    setDataSet(2);
-}
-
-void KeyEventOptions::on_btnCompare_clicked()
-{
-    if (Set1.set && Set2.set){
-        if (Set1.event != Set2.event)
-            qDebug() << "Cannot compare " + events.at(Set1.event) + " with " + events.at(Set2.event) << endl;
-        else{
-            qDebug() << "ok to compare" << endl;
-            QString first = analyse(Set1);
-            QString second = analyse(Set2);
-            QString result = da.compare(first, second);
-
-            rw.setText(result);
-            rw.show();
+            da.analyse(qry, ds.event, num, &result);
+            result += "\n\n";
+        }break;
         }
     }
-    else
-        qDebug() << "Both data sets must be set for comparison" << endl;
-}*/
+}
+
+void KeyEventOptions::on_cbEvent_currentIndexChanged(int index)
+{
+    if (index != 0)
+        ui->cbTime->setEnabled(true);
+    else{
+        ui->cbTime->setCurrentIndex(0);
+        ui->cbTime->setEnabled(false);
+    }
+}

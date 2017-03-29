@@ -10,6 +10,7 @@ public:
     QString getQuery(int event, QString comp, int within, int time, int condition);
     QString maxId();
     QString getUnique(int idx);
+    QString getMatchQuery(int id);
 
 private:
     QString query;

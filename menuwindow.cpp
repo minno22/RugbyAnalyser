@@ -23,7 +23,9 @@ void MenuWindow::on_btnKeyEventAnalysis_clicked()
 
 void MenuWindow::on_btnViewDb_clicked()
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor); //changes mouse icon to wait
     vdb.setup(0);
+    QApplication::restoreOverrideCursor(); //resets mouse icon
     vdb.show();
 }
 

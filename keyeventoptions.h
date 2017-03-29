@@ -24,29 +24,32 @@ public:
 private slots:
     void on_btnAnalyse_clicked();
 
-    /*void on_btnData1_clicked();
-
-    void on_btnData2_clicked();
-
-    void on_btnCompare_clicked();*/
+    void on_cbEvent_currentIndexChanged(int index);
 
 private:
     Ui::KeyEventOptions *ui;
+
+    struct dataSet{
+        int event;
+        QString comp;
+        QString compare;
+        int within;
+        int time;
+        bool set = false;
+    } ds;
 
     void populateDDL();
     QueryBuilder qb;
     QueryDB qdb;
     DataAnalyser da;
     ResultsWindow rw;
-    QStringList events, comps, withins, times;
-    DataAnalyser::dataSet Set1, Set2;
-    //QVector <int> arr;
+    QStringList events, comps, comps2, withins, times;
+    QString result;
 
     int getNumMatches(QString comp);
     QStringList getComps();
-    //void setDataSet(int num);
-    QString analyse(DataAnalyser::dataSet data);
-    void displayResults(int num, QString result);
+    void analyse();
+    void displayResults(int num);
 };
 
 #endif // KEYEVENTOPTIONS_H

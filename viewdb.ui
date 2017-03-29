@@ -6,21 +6,46 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>695</width>
-    <height>443</height>
+    <width>1231</width>
+    <height>581</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog{background-image: url(:/new/prefix1/Assets/Background1.jpg) }
+
+QLabel{color:green; background-color:rgb(226, 226, 226); font: 14pt &quot;Arial Rounded MT Bold&quot;;}
+
+
+QPushButton { color: green; background-color:white }
+
+QComboBox {color:green; background-color:white}</string>
   </property>
   <widget class="QTextBrowser" name="textBrowser">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>60</y>
-     <width>651</width>
-     <height>361</height>
+     <width>1191</width>
+     <height>501</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial Rounded MT Bold</family>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(226, 226, 226);</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Panel</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
    </property>
   </widget>
   <widget class="QLabel" name="lblTable">
@@ -34,8 +59,15 @@
    </property>
    <property name="font">
     <font>
-     <pointsize>16</pointsize>
+     <family>Arial Rounded MT Bold</family>
+     <pointsize>14</pointsize>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
     </font>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Panel</enum>
    </property>
    <property name="text">
     <string>Table</string>

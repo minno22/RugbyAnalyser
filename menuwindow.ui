@@ -13,6 +13,15 @@
   <property name="windowTitle">
    <string>MenuWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow{background-image: url(:/new/prefix1/Assets/Background1.jpg);  }
+
+QLabel{color:green; background-color:rgb(226, 226, 226); font: 40pt &quot;Arial Rounded MT Bold&quot;;}
+
+
+QPushButton { color: green; background-color:white;  font: 11pt &quot;Arial Rounded MT Bold&quot;;}
+</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QPushButton" name="btnKeyEventAnalysis">
     <property name="geometry">
@@ -72,21 +81,35 @@
    <widget class="QLabel" name="lblHeader">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>20</y>
-      <width>441</width>
+      <width>481</width>
       <height>51</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>24</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
+      <family>Arial Rounded MT Bold</family>
+      <pointsize>40</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Panel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="lineWidth">
+     <number>1</number>
+    </property>
     <property name="text">
-     <string>GAME STORIES</string>
+     <string>SPORTS STORIES</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>

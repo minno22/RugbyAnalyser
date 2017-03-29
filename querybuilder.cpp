@@ -7,15 +7,18 @@ QueryBuilder::QueryBuilder()
 
 }
 
-QString QueryBuilder::getQuery(int event, QString comp, int within, int time, int condition)
+QString QueryBuilder::getQuery(int event, QString comp, int within, int time, int condition) //generate sql query string
 {
-    //SELECT * FROM Try JOIN Match ON Try.MatchID = Match.MatchID WHERE Competition LIKE 'Pro 12'
+    //example query = SELECT * FROM Try JOIN Match ON Try.MatchID = Match.MatchID WHERE Competition LIKE 'Pro 12'
+
+    if (comp == "Women's 6 Nations")
+        comp = "Women''s 6 Nations";
 
     QString select, table, join = "", where = "", yymmdd = "", timeStr = "", firstCond = "WHERE";
 
     select = "SELECT * FROM Match";
 
-    if (event > 0){
+    if (event > 0){ //table to query
         switch (event) {
         case 1: table = "Try";
             break;
@@ -31,18 +34,18 @@ QString QueryBuilder::getQuery(int event, QString comp, int within, int time, in
         join = " JOIN " + table + " ON Match.MatchID = " + table + ".MatchID";
     }
 
-    if (comp != "All"){
+    if (comp != "All Competitions"){ //competition to query
         where = " " + firstCond + " Competition LIKE '" + comp + "'";
         firstCond = " AND ";
     }
 
-    if (within > 0){
+    if (within > 0){ //corresponds to the within option
         yymmdd = " " + firstCond + " MatchDate >= '";
         yymmdd += setDate(within);
         firstCond = " AND ";
     }
 
-    if (condition > 0){
+    if (condition > 0){ //for booking analysis
         select = "SELECT * FROM Booking JOIN " + table + " ON Booking.MatchID = " + table + ".MatchID";
         join = " JOIN Match ON Booking.MatchID = Match.MatchID";
         if (time > 0){
@@ -51,7 +54,7 @@ QString QueryBuilder::getQuery(int event, QString comp, int within, int time, in
             firstCond = " AND ";
         }
     }
-    else if (time > 0){
+    else if (time > 0){ //time in match option
         timeStr = " " + firstCond + " ";
         timeStr += setTime(time, 0);
         firstCond = " AND ";
@@ -62,7 +65,7 @@ QString QueryBuilder::getQuery(int event, QString comp, int within, int time, in
     return query;
 }
 
-QString QueryBuilder::setDate(int idx)
+QString QueryBuilder::setDate(int idx) //calculate the date for the within option
 {
     QString yymmdd = "";
 
@@ -99,7 +102,7 @@ QString QueryBuilder::setDate(int idx)
     return yymmdd;
 }
 
-QString QueryBuilder::setTime(int idx, int tme)
+QString QueryBuilder::setTime(int idx, int tme) //set the string for the time in match option
 {
     QString tInMatch;
     if (tme == 0)
@@ -134,6 +137,11 @@ QString QueryBuilder::maxId()
 QString QueryBuilder::getUnique(int idx)
 {
     return "SELECT Competition FROM Match";
+}
+
+QString QueryBuilder::getMatchQuery(int id)
+{
+    return "SELECT * FROM Match WHERE MatchID = " + QString::number(id);
 }
 
 //taken from http://stackoverflow.com/questions/2344330/algorithm-to-add-or-subtract-days-from-a-date
