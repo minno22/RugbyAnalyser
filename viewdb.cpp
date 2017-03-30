@@ -25,7 +25,7 @@ void ViewDb::setup(int idx)
 void ViewDb::displayTable(int index) //display database table as string
 {
     QApplication::setOverrideCursor(Qt::WaitCursor); //changes mouse icon to wait
-    QString query = qb.getQuery(index, "All", 0, 0, 0);
+    QString query = qb.getQuery(index, "All Competitions", 0, 0, 0);
     qdb.setQuery(query);
     QSqlQuery qry = qdb.executeQuery();
     QString result;

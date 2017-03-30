@@ -42,7 +42,7 @@ private:
     QueryBuilder qb;
     QueryDB qdb;
     DataAnalyser da;
-    ResultsWindow rw;
+    ResultsWindow *rw;
     QStringList events, comps, comps2, withins, times;
     QString result;
 

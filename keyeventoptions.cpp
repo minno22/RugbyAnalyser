@@ -22,7 +22,7 @@ void KeyEventOptions::analyseStories()
     int num = getNumMatches("All Competitions"); //get number of matches in database
     QVector <QString> queries;
     for (int i = 1; i < 4; i++){ //loop to get required sql queries
-        QString query = qb.getQuery(i, "All", 0, 0, 0); //gets sql query
+        QString query = qb.getQuery(i, "All Competitions", 0, 0, 0); //gets sql query
         queries.push_back(query); //add query to vector of queries
     }
     da.analyseStories(num, queries, &result); //calls data analyser to analyse game stories and generate an output string
@@ -48,21 +48,17 @@ void KeyEventOptions::on_btnAnalyse_clicked()
 
 void KeyEventOptions::displayResults(int num) //configure and display results window object
 {
+    rw = new ResultsWindow();
     qDebug() << result << endl;
-    rw.setText(result); //add the result text to the window
-    if (ds.event == 0)
-        da.setPieChartMatches();
-    else if (ds.event == 5)
-        da.setScoresChart();
+    rw->setText(result); //add the result text to the window
     QChartView *chartView = da.getChart(); //get chart from data analyser
     if (num == 0 && ds.event != 0 && ds.event != 5){ //if more than one chart to be added to window
-        da.setChart1(events.at(ds.event)); //configure chart in data analyser
         QChartView *chartView0 = da.getChart1(); //get chart from data analyser
-        rw.setGraph0(chartView0, chartView); //add graph to window
+        rw->setGraph0(chartView0, chartView); //add graph to window
     }
     else
-        rw.setGraph1(chartView); //add graph to window
-    rw.show(); //display window
+        rw->setGraph1(chartView); //add graph to window
+    rw->show(); //display window
 }
 
 void KeyEventOptions::populateDDL() //configure the drop down lists in the key event options window
@@ -128,8 +124,10 @@ void KeyEventOptions::analyse()
     for (int i = 0; i < iterations; i++){
         if (i == 0)
             comp = ds.comp;
-        else
+        else{
             comp = ds.compare;
+            da.setFirstComp();
+        }
         result += comp + ": ";
         int num = getNumMatches(comp);
         QString query;
@@ -137,14 +135,28 @@ void KeyEventOptions::analyse()
 
         switch(ds.event){
         case 0: { //analyse matches
-            for (int i = 0; i < 5; i++){
-                query = qb.getQuery(i, comp, ds.within, ds.time, 0);
-                qdb.setQuery(query);
-                qry = qdb.executeQuery();
+            for (int j = 0; j < 5; j++){
                 da.resetArray(0);
-                da.analyse(qry, i, num, &result);
+                if (j != 4){
+                    query = qb.getQuery(j, comp, ds.within, ds.time, 0);
+                    qdb.setQuery(query);
+                    qry = qdb.executeQuery();
+                    da.analyse(qry, j, num, &result, comp);
+                    qry.clear();
+                }
+                else{
+                    QVector <QString> queries;
+                    query = qb.getQuery(4, comp, ds.within, ds.time, 0);
+                    queries.push_back(query);
+                    for (int i = 1; i < 4; i++){
+                        query = qb.getQuery(i, comp, ds.within, ds.time, 1);
+                        queries.push_back(query);
+                    }
+                    da.analyseConditions(num, queries, &result, comp);
+                }
                 result += "\n\n\n";
-                qry.clear();
+                if (iterations == i + 1)
+                    da.setPieChartMatches();
             }
         }break; //analyse bookings
         case 4: {
@@ -155,28 +167,34 @@ void KeyEventOptions::analyse()
                 query = qb.getQuery(i, comp, ds.within, ds.time, 1);
                 queries.push_back(query);
             }
-            result += "\n\n";
-            da.analyseConditions(num, queries, &result);
+            da.analyseConditions(num, queries, &result, comp);
+            result += "\n\n\n";
         }break;
         case 5: { //analyse all scores
-            for (int i = 1; i < 4; i++){
-                query = qb.getQuery(i, comp, ds.within, ds.time, 0);
+            for (int j = 1; j < 4; j++){
+                query = qb.getQuery(j, comp, ds.within, ds.time, 0);
                 qdb.setQuery(query);
                 qry = qdb.executeQuery();
                 da.resetArray(0);
-                da.analyse(qry, i, num, &result);
+                da.analyse(qry, j, num, &result, comp);
                 result += "\n\n";
                 qry.clear();
+                if (iterations == i + 1)
+                    da.setScoresChart();
             }
         }break;
         default: { //penalties, tries, drop goals
             query = qb.getQuery(ds.event, comp, ds.within, ds.time, 0);
             qdb.setQuery(query);
             qry = qdb.executeQuery();
-            da.analyse(qry, ds.event, num, &result);
+            da.analyse(qry, ds.event, num, &result, comp);
             result += "\n\n";
         }break;
         }
+    }
+    if (iterations == 2){
+        da.compare(ds.event, &result);
+        da.setFirstComp();
     }
 }
 

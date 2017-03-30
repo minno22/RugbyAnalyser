@@ -12,6 +12,7 @@ ResultsWindow::ResultsWindow(QWidget *parent) :
 ResultsWindow::~ResultsWindow()
 {
     delete ui;
+    delete this;
 }
 
 void ResultsWindow::setText(QString text) //set the output string as the text
